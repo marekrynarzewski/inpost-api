@@ -1,0 +1,42 @@
+{
+  "name": "focus-garden",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/focus-garden",
+  "sourceRoot": "packages/focus-garden",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/focus-garden",
+        "commands": [
+          {
+            "command": "sh -c '[ -f .env ] || cp .env.example .env'"
+          },
+          {
+            "command": "docker compose up --build -d"
+          },
+          {
+            "command": "docker compose exec -T php composer install"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/focus-garden",
+        "commands": [
+          {
+            "command": "sh -c '[ -f .env ] || cp .env.example .env'"
+          },
+          {
+            "command": "docker compose up -d"
+          }
+        ],
+        "parallel": false
+      }
+    }
+  }
+}
