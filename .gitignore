@@ -4,4 +4,4 @@
 /.vscode
 log.txt
 !var/logs/.gitignore
-var/logs/
+var/logs/*.log

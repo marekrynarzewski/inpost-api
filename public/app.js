@@ -5,6 +5,11 @@ const payloadViewElement = document.querySelector('#payload-view code');
 const runStatusElement = document.querySelector('#run-status');
 const runModeLabelElement = document.querySelector('#run-mode-label');
 const demoForm = document.querySelector('#demo-form');
+const postCodeFields = {
+  receiver_post_code: 'Kod pocztowy odbiorcy',
+  sender_post_code: 'Kod pocztowy nadawcy',
+  dispatch_post_code: 'Kod pocztowy odbioru',
+};
 
 function formatJson(data) {
   return JSON.stringify(data, null, 2);
@@ -74,9 +79,68 @@ function collectFormData(mode) {
   return payload;
 }
 
+function normalizePostCode(value) {
+  const compact = String(value || '').trim().replace(/\s+/g, '');
+
+  if (/^\d{5}$/.test(compact)) {
+    return `${compact.slice(0, 2)}-${compact.slice(2)}`;
+  }
+
+  if (/^\d{2}-\d{3}$/.test(compact)) {
+    return compact;
+  }
+
+  return null;
+}
+
+function validatePayload(payload) {
+  const errors = [];
+
+  Object.entries(postCodeFields).forEach(([fieldName, label]) => {
+    const input = demoForm.querySelector(`[name="${fieldName}"]`);
+    const normalized = normalizePostCode(payload[fieldName]);
+
+    if (!normalized) {
+      errors.push(`${label}: uzyj formatu 00-000.`);
+      if (input) {
+        input.setAttribute('aria-invalid', 'true');
+      }
+      return;
+    }
+
+    payload[fieldName] = normalized;
+    if (input) {
+      input.value = normalized;
+      input.removeAttribute('aria-invalid');
+    }
+  });
+
+  return errors;
+}
+
 async function runWorkflow(mode) {
   runStatusElement.textContent = mode === 'live' ? 'Uruchamianie live flow...' : 'Uruchamianie demo flow...';
   runModeLabelElement.textContent = mode === 'live' ? 'Tryb live' : 'Tryb demo';
+  const payload = collectFormData(mode);
+  const validationErrors = validatePayload(payload);
+
+  if (validationErrors.length) {
+    renderTimeline({
+      status: 'error',
+      timeline: [
+        {
+          title: 'Validation failed',
+          state: 'error',
+          detail: 'Popraw kody pocztowe przed wysylka danych do ShipX.',
+          response: {
+            errors: validationErrors,
+          },
+        },
+      ],
+    });
+    runStatusElement.textContent = 'Formularz wymaga poprawy';
+    return;
+  }
 
   try {
     const response = await fetch('run.php', {
@@ -84,7 +148,7 @@ async function runWorkflow(mode) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(collectFormData(mode)),
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json();

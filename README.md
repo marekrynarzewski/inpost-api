@@ -76,6 +76,7 @@ Ekran prezentacyjny wspiera dwa tryby:
 
 - `demo` pokazuje symulowany, ale realistyczny przebieg integracji
 - `live` wykonuje realne requesty do sandboxowego ShipX, jesli w `.env` jest poprawny token
+- kody pocztowe dla `sender`, `receiver` i `dispatch` sa walidowane oraz normalizowane do formatu `00-000`
 
 ## Docker
 

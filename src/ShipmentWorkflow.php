@@ -31,7 +31,12 @@ final class ShipmentWorkflow
     public function run(array $input = []): array
     {
         $mode = ($input['mode'] ?? 'simulate') === 'live' ? 'live' : 'simulate';
-        $payload = $this->buildInputPayload($input);
+
+        try {
+            $payload = $this->buildInputPayload($input);
+        } catch (RuntimeException $exception) {
+            return $this->buildValidationErrorResult($mode, $input, $exception);
+        }
 
         $this->log('shipment_workflow.run.started', [
             'mode' => $mode,
@@ -373,6 +378,18 @@ final class ShipmentWorkflow
     private function buildInputPayload(array $input): array
     {
         $organizationId = (string) ($input['organization_id'] ?? $this->getEnvValue('PACZKOMATY_INPOST_ORGANIZATIONID', '5269'));
+        $receiverPostCode = $this->normalizePolishPostCode(
+            (string) ($input['receiver_post_code'] ?? '62-200'),
+            'Kod pocztowy odbiorcy'
+        );
+        $senderPostCode = $this->normalizePolishPostCode(
+            (string) ($input['sender_post_code'] ?? '25-437'),
+            'Kod pocztowy nadawcy'
+        );
+        $dispatchPostCode = $this->normalizePolishPostCode(
+            (string) ($input['dispatch_post_code'] ?? '31-209'),
+            'Kod pocztowy odbioru kuriera'
+        );
 
         $receiver = [
             'company_name' => (string) ($input['receiver_company'] ?? 'Focus Garden Client'),
@@ -385,7 +402,7 @@ final class ShipmentWorkflow
                 'street' => (string) ($input['receiver_street'] ?? 'Fabryczna'),
                 'building_number' => (string) ($input['receiver_building'] ?? '2'),
                 'city' => (string) ($input['receiver_city'] ?? 'Gniezno'),
-                'post_code' => (string) ($input['receiver_post_code'] ?? '62-200'),
+                'post_code' => $receiverPostCode,
                 'country_code' => 'PL',
             ],
         ];
@@ -401,7 +418,7 @@ final class ShipmentWorkflow
                 'street' => (string) ($input['sender_street'] ?? 'Na Stoku'),
                 'building_number' => (string) ($input['sender_building'] ?? '18'),
                 'city' => (string) ($input['sender_city'] ?? 'Kielce'),
-                'post_code' => (string) ($input['sender_post_code'] ?? '25-437'),
+                'post_code' => $senderPostCode,
                 'country_code' => 'PL',
             ],
         ];
@@ -441,11 +458,42 @@ final class ShipmentWorkflow
                     'street' => (string) ($input['dispatch_street'] ?? 'Malborska'),
                     'building_number' => (string) ($input['dispatch_building'] ?? '130'),
                     'city' => (string) ($input['dispatch_city'] ?? 'Krakow'),
-                    'post_code' => (string) ($input['dispatch_post_code'] ?? '31-209'),
+                    'post_code' => $dispatchPostCode,
                     'country_code' => 'PL',
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    private function buildValidationErrorResult(string $mode, array $input, RuntimeException $exception): array
+    {
+        $message = $exception->getMessage();
+        $result = [
+            'mode' => $mode,
+            'status' => 'error',
+            'timeline' => [
+                [
+                    'title' => 'Validation failed',
+                    'state' => 'error',
+                    'detail' => 'Payload nie zostal wyslany do ShipX, bo dane adresowe wymagaja poprawy.',
+                    'response' => ['message' => $message],
+                ],
+            ],
+            'error' => $message,
+        ];
+
+        $this->log('shipment_workflow.run.validation_failed', [
+            'mode' => $mode,
+            'input' => $input,
+            'message' => $message,
+            'result' => $result,
+        ]);
+
+        return $result;
     }
 
     /**
@@ -505,6 +553,30 @@ final class ShipmentWorkflow
         }
 
         return $value;
+    }
+
+    private function normalizePolishPostCode(string $value, string $fieldLabel): string
+    {
+        $rawValue = trim($value);
+        $normalized = preg_replace('/\s+/', '', $rawValue);
+
+        if (!is_string($normalized)) {
+            throw new RuntimeException($fieldLabel . ' ma nieprawidlowy format.');
+        }
+
+        if (preg_match('/^\d{5}$/', $normalized) === 1) {
+            $normalized = substr($normalized, 0, 2) . '-' . substr($normalized, 2);
+        }
+
+        if (preg_match('/^\d{2}-\d{3}$/', $normalized) !== 1) {
+            throw new RuntimeException(sprintf(
+                '%s "%s" jest nieprawidlowy. Uzyj formatu 00-000.',
+                $fieldLabel,
+                $rawValue === '' ? '(pusty)' : $rawValue
+            ));
+        }
+
+        return $normalized;
     }
 
     /**

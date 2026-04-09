@@ -310,6 +310,12 @@ h1 {
   gap: 8px;
 }
 
+.form-note {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
 label {
   font-size: 0.75rem;
   letter-spacing: 0.07em;
@@ -330,6 +336,11 @@ input {
 input:focus {
   outline: 2px solid rgba(236, 158, 0, 0.35);
   border-color: rgba(236, 158, 0, 0.55);
+}
+
+input[aria-invalid="true"] {
+  border-color: rgba(165, 63, 43, 0.7);
+  box-shadow: 0 0 0 3px rgba(165, 63, 43, 0.12);
 }
 
 .output-grid {

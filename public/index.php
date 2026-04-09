@@ -107,8 +107,33 @@ $presentation = $workflow->getPresentationData();
                             <input id="receiver_city" name="receiver_city" value="<?= htmlspecialchars($presentation['defaults']['shipment']['receiver']['address']['city']) ?>">
                         </div>
                         <div class="field-group">
-                            <label for="parcel_weight">Waga (kg)</label>
-                            <input id="parcel_weight" name="parcel_weight" value="<?= htmlspecialchars($presentation['defaults']['shipment']['parcels'][0]['weight']['amount']) ?>">
+                            <label for="receiver_post_code">Kod pocztowy odbiorcy</label>
+                            <input
+                                id="receiver_post_code"
+                                name="receiver_post_code"
+                                inputmode="numeric"
+                                pattern="\d{2}-?\d{3}"
+                                placeholder="00-000"
+                                value="<?= htmlspecialchars($presentation['defaults']['shipment']['receiver']['address']['post_code']) ?>"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="sender_city">Miasto nadawcy</label>
+                            <input id="sender_city" name="sender_city" value="<?= htmlspecialchars($presentation['defaults']['shipment']['sender']['address']['city']) ?>">
+                        </div>
+                        <div class="field-group">
+                            <label for="sender_post_code">Kod pocztowy nadawcy</label>
+                            <input
+                                id="sender_post_code"
+                                name="sender_post_code"
+                                inputmode="numeric"
+                                pattern="\d{2}-?\d{3}"
+                                placeholder="00-000"
+                                value="<?= htmlspecialchars($presentation['defaults']['shipment']['sender']['address']['post_code']) ?>"
+                            >
                         </div>
                     </div>
 
@@ -118,10 +143,32 @@ $presentation = $workflow->getPresentationData();
                             <input id="dispatch_city" name="dispatch_city" value="<?= htmlspecialchars($presentation['defaults']['dispatch']['address']['city']) ?>">
                         </div>
                         <div class="field-group">
+                            <label for="dispatch_post_code">Kod pocztowy odbioru</label>
+                            <input
+                                id="dispatch_post_code"
+                                name="dispatch_post_code"
+                                inputmode="numeric"
+                                pattern="\d{2}-?\d{3}"
+                                placeholder="00-000"
+                                value="<?= htmlspecialchars($presentation['defaults']['dispatch']['address']['post_code']) ?>"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="parcel_weight">Waga (kg)</label>
+                            <input id="parcel_weight" name="parcel_weight" value="<?= htmlspecialchars($presentation['defaults']['shipment']['parcels'][0]['weight']['amount']) ?>">
+                        </div>
+                        <div class="field-group">
                             <label for="dispatch_comment">Komentarz dla kuriera</label>
                             <input id="dispatch_comment" name="dispatch_comment" value="<?= htmlspecialchars($presentation['defaults']['dispatch']['comment']) ?>">
                         </div>
                     </div>
+
+                    <p class="form-note">
+                        Kody pocztowe akceptuja format <strong>00-000</strong>. Wpisane <strong>12345</strong> lub <strong>12 345</strong> zostanie automatycznie znormalizowane do <strong>12-345</strong>.
+                    </p>
                 </form>
 
                 <div class="runner-actions">
