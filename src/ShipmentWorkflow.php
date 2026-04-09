@@ -262,7 +262,7 @@ final class ShipmentWorkflow
             ]);
             $shipmentId = $shipment['id'] ?? null;
 
-            if (!is_string($shipmentId) || $shipmentId === '') {
+            if (!is_numeric($shipmentId) || $shipmentId === '') {
                 throw new RuntimeException('Brak shipment ID w odpowiedzi API.');
             }
 
