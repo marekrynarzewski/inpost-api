@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/src/ShipmentWorkflow.php';
 
-use FocusGarden\ShipmentWorkflow;
+use Mrynarzewski\InpostApi\ShipmentWorkflow;
 
 $mode = in_array('--live', $argv, true) ? 'live' : 'simulate';
 

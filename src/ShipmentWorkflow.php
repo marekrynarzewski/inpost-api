@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FocusGarden;
+namespace Mrynarzewski\InpostApi;
 
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
@@ -33,11 +33,32 @@ final class ShipmentWorkflow
         $mode = ($input['mode'] ?? 'simulate') === 'live' ? 'live' : 'simulate';
         $payload = $this->buildInputPayload($input);
 
+        $this->log('shipment_workflow.run.started', [
+            'mode' => $mode,
+            'input' => $input,
+            'payload' => $payload,
+        ]);
+
         if ($mode === 'simulate') {
-            return $this->runSimulation($payload);
+            $result = $this->runSimulation($payload);
+            $this->log('shipment_workflow.run.completed', [
+                'mode' => $mode,
+                'status' => $result['status'] ?? null,
+                'artifacts' => $result['artifacts'] ?? [],
+            ]);
+
+            return $result;
         }
 
-        return $this->runLive($payload);
+        $result = $this->runLive($payload);
+        $this->log('shipment_workflow.run.completed', [
+            'mode' => $mode,
+            'status' => $result['status'] ?? null,
+            'artifacts' => $result['artifacts'] ?? [],
+            'error' => $result['error'] ?? null,
+        ]);
+
+        return $result;
     }
 
     /**
@@ -100,7 +121,20 @@ final class ShipmentWorkflow
         $shipmentId = 'shp_' . substr(hash('sha256', json_encode($input)), 0, 10);
         $dispatchId = 'dsp_' . substr(hash('sha256', $shipmentId), 0, 10);
 
-        return [
+        $this->log('shipment_workflow.simulation.request', [
+            'shipment' => [
+                'method' => 'POST',
+                'path' => '/v1/organizations/' . $input['organization_id'] . '/shipments',
+                'body' => $input['shipment'],
+            ],
+            'dispatch' => [
+                'method' => 'POST',
+                'path' => '/v1/organizations/' . $input['organization_id'] . '/dispatch_orders',
+                'body' => $input['dispatch'],
+            ],
+        ]);
+
+        $result = [
             'mode' => 'simulate',
             'status' => 'success',
             'meta' => [
@@ -159,6 +193,14 @@ final class ShipmentWorkflow
                 'dispatch_order_id' => $dispatchId,
             ],
         ];
+
+        $this->log('shipment_workflow.simulation.completed', [
+            'shipment_id' => $shipmentId,
+            'dispatch_order_id' => $dispatchId,
+            'result' => $result,
+        ]);
+
+        return $result;
     }
 
     /**
@@ -197,17 +239,32 @@ final class ShipmentWorkflow
                 ],
             ];
 
+            $this->log('shipment_workflow.live.shipment.request', [
+                'method' => 'POST',
+                'path' => '/v1/organizations/' . $input['organization_id'] . '/shipments',
+                'body' => $input['shipment'],
+            ]);
+
             $shipmentResponse = $client->post('/v1/organizations/' . $input['organization_id'] . '/shipments', [
                 'json' => $input['shipment'],
             ]);
 
             /** @var array<string, mixed> $shipment */
             $shipment = json_decode((string) $shipmentResponse->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->log('shipment_workflow.live.shipment.response', [
+                'path' => '/v1/organizations/' . $input['organization_id'] . '/shipments',
+                'body' => $shipment
+            ]);
             $shipmentId = $shipment['id'] ?? null;
 
             if (!is_string($shipmentId) || $shipmentId === '') {
                 throw new RuntimeException('Brak shipment ID w odpowiedzi API.');
             }
+
+            $this->log('shipment_workflow.live.shipment.response', [
+                'shipment_id' => $shipmentId,
+                'response' => $shipment,
+            ]);
 
             $timeline[] = [
                 'title' => 'Shipment created',
@@ -223,10 +280,23 @@ final class ShipmentWorkflow
                 ++$attempt;
                 sleep(2);
 
+                $this->log('shipment_workflow.live.shipment.poll.request', [
+                    'attempt' => $attempt,
+                    'method' => 'GET',
+                    'path' => '/v1/shipments/' . $shipmentId,
+                ]);
+
                 $statusResponse = $client->get('/v1/shipments/' . $shipmentId);
                 /** @var array<string, mixed> $confirmedShipment */
                 $confirmedShipment = json_decode((string) $statusResponse->getBody(), true, 512, JSON_THROW_ON_ERROR);
                 $status = $confirmedShipment['status'] ?? 'unknown';
+
+                $this->log('shipment_workflow.live.shipment.poll.response', [
+                    'attempt' => $attempt,
+                    'shipment_id' => $shipmentId,
+                    'status' => $status,
+                    'response' => $confirmedShipment,
+                ]);
 
                 $timeline[] = [
                     'title' => 'Shipment poll #' . $attempt,
@@ -243,12 +313,25 @@ final class ShipmentWorkflow
             $dispatchPayload = $input['dispatch'];
             $dispatchPayload['shipments'] = [$shipmentId];
 
+            $this->log('shipment_workflow.live.dispatch.request', [
+                'method' => 'POST',
+                'path' => '/v1/organizations/' . $input['organization_id'] . '/dispatch_orders',
+                'body' => $dispatchPayload,
+                'shipment_id' => $shipmentId,
+            ]);
+
             $dispatchResponse = $client->post('/v1/organizations/' . $input['organization_id'] . '/dispatch_orders', [
                 'json' => $dispatchPayload,
             ]);
 
             /** @var array<string, mixed> $dispatch */
             $dispatch = json_decode((string) $dispatchResponse->getBody(), true, 512, JSON_THROW_ON_ERROR);
+
+            $this->log('shipment_workflow.live.dispatch.response', [
+                'shipment_id' => $shipmentId,
+                'dispatch_order_id' => $dispatch['id'] ?? null,
+                'response' => $dispatch,
+            ]);
 
             $timeline[] = [
                 'title' => 'Courier ordered',
@@ -384,6 +467,12 @@ final class ShipmentWorkflow
             'response' => ['message' => $message],
         ];
 
+        $this->log('shipment_workflow.failed', [
+            'message' => $message,
+            'type' => $exception::class,
+            'timeline' => $timeline,
+        ]);
+
         return [
             'mode' => 'live',
             'status' => 'error',
@@ -416,5 +505,13 @@ final class ShipmentWorkflow
         }
 
         return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function log(string $event, array $context = []): void
+    {
+        RequestLogger::log($this->projectRoot, $event, $context);
     }
 }

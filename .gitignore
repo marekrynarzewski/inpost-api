@@ -3,3 +3,5 @@
 /.idea
 /.vscode
 log.txt
+!var/logs/.gitignore
+var/logs/

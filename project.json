@@ -1,5 +1,5 @@
 {
-  "name": "focus-garden",
+  "name": "inpostapi",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "root": "packages/focus-garden",
   "sourceRoot": "packages/focus-garden",
@@ -11,13 +11,13 @@
         "cwd": "packages/focus-garden",
         "commands": [
           {
-            "command": "sh -c '[ -f .env ] || cp .env.example .env'"
+            "command": "sh -c '[ -f .env ] || { echo \".env is required. Create it manually, for example from .env.dist.\"; exit 1; }'"
           },
           {
-            "command": "docker compose up --build -d"
+            "command": "docker compose -f docker-compose.yaml -f docker-compose-portfolio.yaml up --build -d"
           },
           {
-            "command": "docker compose exec -T php composer install"
+            "command": "docker compose -f docker-compose.yaml -f docker-compose-portfolio.yaml exec -T php composer install"
           }
         ],
         "parallel": false
@@ -29,10 +29,10 @@
         "cwd": "packages/focus-garden",
         "commands": [
           {
-            "command": "sh -c '[ -f .env ] || cp .env.example .env'"
+            "command": "sh -c '[ -f .env ] || { echo \".env is required. Create it manually, for example from .env.dist.\"; exit 1; }'"
           },
           {
-            "command": "docker compose up -d"
+            "command": "docker compose -f docker-compose.yaml -f docker-compose-portfolio.yaml up -d"
           }
         ],
         "parallel": false

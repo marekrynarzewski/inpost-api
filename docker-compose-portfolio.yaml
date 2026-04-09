@@ -1,0 +1,17 @@
+services:
+  nginx:
+    networks:
+      backend:
+      edge:
+        aliases:
+          - inpostapi_nginx
+
+  php:
+    networks:
+      - backend
+
+networks:
+  backend:
+  edge:
+    external: true
+    name: portfolio_edge

@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
-require dirname(__DIR__) . '/src/ShipmentWorkflow.php';
 
-use FocusGarden\ShipmentWorkflow;
+use Mrynarzewski\InpostApi\ShipmentWorkflow;
 
 $workflow = new ShipmentWorkflow(dirname(__DIR__));
 $presentation = $workflow->getPresentationData();
