@@ -73,44 +73,44 @@ final class ShipmentWorkflow
     {
         return [
             'project' => [
-                'name' => 'Focus Garden',
-                'subtitle' => 'Demo integracji InPost ShipX dla tworzenia przesylki i zamowienia kuriera',
-                'summary' => 'Warstwa prezentacji zamienia pojedynczy skrypt PHP w czytelne case study: pokazuje request payload, potwierdzenie shipmentu i finalne zlecenie odbioru.',
+                'name' => 'InpostApi',
+                'subtitle' => 'Integracja z InPost ShipX — tworzenie przesyłki i zamówienie kuriera',
+                'summary' => 'Pojedynczy skrypt PHP przekształcony w czytelny przepływ integracyjny: od budowania payloadu przez polling statusu aż po zlecenie odbioru.',
             ],
             'highlights' => [
                 [
-                    'title' => 'Jeden flow, dwa use-case’y',
-                    'copy' => 'Najpierw tworzenie shipmentu kurierskiego, potem polling statusu i na koncu dispatch order dla odbioru.',
+                    'title' => 'Trzy kroki, jeden przepływ',
+                    'copy' => 'Najpierw tworzenie przesyłki kurierskiej, potem polling statusu, na końcu zlecenie odbioru — każdy etap widoczny osobno.',
                 ],
                 [
-                    'title' => 'Tryb demo i tryb live',
-                    'copy' => 'Bez tokena mozna pokazac caly proces w formie symulacji. Z tokenem sandboxowym ten sam ekran uruchamia realne requesty do API.',
+                    'title' => 'Sandbox InPost ShipX',
+                    'copy' => 'Formularz wysyła prawdziwe żądania do środowiska sandbox InPost. Token konfigurowany przez zmienną środowiskową.',
                 ],
                 [
-                    'title' => 'Payload i odpowiedz w jednym miejscu',
-                    'copy' => 'Rekruter widzi nie tylko efekt, ale tez ksztalt danych, zaleznosci i decyzje integracyjne.',
+                    'title' => 'Payload i odpowiedź w jednym miejscu',
+                    'copy' => 'Każdy krok pokazuje kształt danych — żądanie, zależności między etapami i decyzje integracyjne.',
                 ],
             ],
             'sequence' => [
                 [
                     'step' => '01',
-                    'title' => 'Budowa shipment payload',
-                    'copy' => 'Adresat, nadawca, gabaryty, masa i typ uslugi sa skladane do requestu zgodnego z ShipX.',
+                    'title' => 'Budowa payloadu przesyłki',
+                    'copy' => 'Dane adresata, nadawcy, gabaryty, masa i typ usługi są składane w żądanie zgodne ze specyfikacją ShipX.',
                 ],
                 [
                     'step' => '02',
-                    'title' => 'Polling statusu shipmentu',
-                    'copy' => 'Po utworzeniu shipmentu integracja czeka, az status przejdzie do confirmed, zamiast od razu skladac kolejne zadanie.',
+                    'title' => 'Polling statusu',
+                    'copy' => 'Po utworzeniu przesyłki integracja czeka, aż status przejdzie do confirmed, zamiast od razu składać kolejne żądanie.',
                 ],
                 [
                     'step' => '03',
-                    'title' => 'Zamowienie kuriera',
-                    'copy' => 'Dopiero po potwierdzeniu przesylki tworzony jest dispatch order z danymi odbioru.',
+                    'title' => 'Zamówienie kuriera',
+                    'copy' => 'Dopiero po potwierdzeniu przesyłki tworzone jest zlecenie odbioru z danymi punktu nadania.',
                 ],
             ],
             'metrics' => [
-                ['label' => 'API calls', 'value' => '3+'],
-                ['label' => 'Tryby uruchomienia', 'value' => '2'],
+                ['label' => 'Wywołania API', 'value' => '3+'],
+                ['label' => 'Środowisko', 'value' => 'Sandbox'],
                 ['label' => 'Stack', 'value' => 'PHP + Guzzle'],
             ],
             'defaults' => $this->buildInputPayload([]),
