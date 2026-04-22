@@ -6,7 +6,7 @@ namespace Mrynarzewski\InpostApi;
 
 final class RequestLogger
 {
-    private const LOG_FILE = '/var/logs/focus-garden-requests.log';
+    private const LOG_FILE = '/var/logs/inpostapi-requests.log';
 
     /**
      * @param array<string, mixed> $context

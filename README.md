@@ -100,7 +100,7 @@ Mozesz tez uruchomic go przez workspace `Nx`:
 
 ```bash
 cd /home/marek/Projekty/portfolio/bitbucket
-npm run nx -- run focus-garden:build
+npm run nx -- run inpostapi:build
 ```
 
 ## CLI
