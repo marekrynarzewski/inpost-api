@@ -8,6 +8,7 @@ use Mrynarzewski\InpostApi\ShipmentWorkflow;
 
 $workflow = new ShipmentWorkflow(dirname(__DIR__));
 $presentation = $workflow->getPresentationData();
+$ga4MeasurementId = $_ENV['GA4_MEASUREMENT_ID'] ?? getenv('GA4_MEASUREMENT_ID') ?: '';
 
 ?>
 <!doctype html>
@@ -17,6 +18,15 @@ $presentation = $workflow->getPresentationData();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($presentation['project']['name']) ?> Showcase</title>
     <meta name="description" content="<?= htmlspecialchars($presentation['project']['summary']) ?>">
+    <?php if ($ga4MeasurementId !== ''): ?>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=<?= rawurlencode($ga4MeasurementId) ?>"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', <?= json_encode($ga4MeasurementId, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);
+        </script>
+    <?php endif; ?>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
