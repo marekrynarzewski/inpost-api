@@ -16,6 +16,8 @@ services:
     container_name: inpostapi_php
     restart: unless-stopped
     working_dir: /var/www
+    environment:
+      GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
     volumes:
       - ./:/var/www
       - ./php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
